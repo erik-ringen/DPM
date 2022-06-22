@@ -1,0 +1,26 @@
+---
+title: "Causal inference for trait co-evolution using dynamic phylogenetic models"
+format: html
+editor: visual
+---
+
+## Introduction
+
+Co-evolution can be identified statistically as non-zero between-trait phylogenetic correlations----or any other measure of mutual information over evolutionary time. Trait co-evolution is of interest in ecology and evolution when phylogenetic correlations are thought to reflect directed, causal relationships between traits, or when correlated traits share common causes.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
