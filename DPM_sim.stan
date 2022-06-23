@@ -72,13 +72,14 @@ matrix cov_drift(matrix A, matrix Q, real ts) {
 
 
 data{
-  int N;
-  int J;
-  int N_seg;
-  int node_seq[N_seg];
-  int parent[N_seg];
-  vector[N_seg] ts;
-  vector[N_seg] tip;
+  int N; // number of tips
+  int J; // number of response traits
+  int resp_type[J]; // type of trait (1 = gaussian, 2 = binomial)
+  int N_seg; // total number of segments in the tree
+  int node_seq[N_seg]; // index of tree nodes
+  int parent[N_seg]; // index of the parent node of each descendent
+  vector[N_seg] ts; // time since parent
+  vector[N_seg] tip; // indicator of whether a given segment ends in a tip
 }
 
 parameters{
@@ -90,12 +91,12 @@ real a_obs[J]; // intercept for observed variables
 }
 
 transformed parameters{
-matrix[N_seg,2] eta;
-matrix[2,2] Q;
-matrix[2,2] I; 
-matrix[2,2] A;
-matrix[N_seg,2] drift_tips; // terminal drift parameters, saved here to use in likelihood for Gaussian outcomes
-matrix[N_seg,2] sigma_tips; // terminal drift parameters, saved here to use in likelihood for Gaussian outcomes
+matrix[N_seg,J] eta;
+matrix[J,J] Q; // "drift" matrix
+matrix[J,J] I; // identity matrix
+matrix[J,J] A;  // "selection" matrix
+matrix[N_seg,J] drift_tips; // terminal drift parameters, saved here to use in likelihood for Gaussian outcomes
+matrix[N_seg,J] sigma_tips; // terminal drift parameters, saved here to use in likelihood for Gaussian outcomes
 
 // selection matrix, col 1 is var1, col 2 is var2
 A[1,1] = -0.2; // autoregressive effect of var1 on itself
@@ -111,19 +112,19 @@ Q[1,2] = 0;
 Q[2,1] = 0;
 
 // identity matrix
-I = diag_matrix(rep_vector(1,2));
+I = diag_matrix(rep_vector(1,J));
 
 // setting ancestral states, and placeholders
-for (j in 1:2) {
+for (j in 1:J) {
 eta[node_seq[1],j] = eta_anc[j]; // ancestral state
 drift_tips[node_seq[1],j] = -99; // 
 sigma_tips[node_seq[1],j] = -99; // 
 }
 
   for (i in 2:N_seg) {
-  matrix[2,2] A_delta; // amount of deterministic change ("selection")
-  matrix[2,2] VCV; // variance-covariance matrix of stochastic change ("drift")
-  vector[2] drift_seg; // accumulated drift over the segment
+  matrix[J,J] A_delta; // amount of deterministic change ("selection")
+  matrix[J,J] VCV; // variance-covariance matrix of stochastic change ("drift")
+  vector[J] drift_seg; // accumulated drift over the segment
   
   A_delta = A_dt(A, ts[i]);
   VCV = cov_drift(A, Q, ts[i]);
@@ -163,14 +164,16 @@ model{
 
 generated quantities{
   real y[N,2];
+
+  for (j in 1:J) {
   
-  // outcome 1 is bernoulli, outcome 2 is gaussian
-  for (i in 1:N) {
-    // we just add the terminal drift paramter here
-  y[i,1] = bernoulli_logit_rng( eta[i,1] + drift_tips[i,1] );
-
-  // for a Gaussian outcome, use the time-scaled sigma
-  y[i,2] = normal_rng( eta[i,2], sigma_tips[i,2] );
-  }
-
+    if (resp_type == 1) {
+      for (i in 1:N) y[i,j] = normal_rng( eta[i,j], sigma_tips[i,j] );
+    }
+    
+    if (resp_type == 2) {
+      for (i in 1:N) y[i,j] = bernoulli_logit_rng( eta[i,j] + drift_tips[i,j] );
+    }
 }
+}
+

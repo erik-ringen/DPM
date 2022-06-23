@@ -1,7 +1,7 @@
 require(phytools)
 require(phangorn)
 
-chop_tree <- function(tree) {
+chop_tree <- function(tree, scale=T) {
   #### Cut up phylogenetic tree into segments #################
   times <- node.depth.edgelength(tree) # date of each node
   
@@ -21,7 +21,9 @@ chop_tree <- function(tree) {
   #parent_time[1] <- -99 # placeholder for ancestral state
   
   for (i in 2:length(parent_time)) {
-    parent_time[i] <- (node.depth.edgelength(tree)[node_seq[i]] - node.depth.edgelength(tree)[parent[i]]) / max(node.depth.edgelength(tree))
+    if (scale == T) parent_time[i] <- (node.depth.edgelength(tree)[node_seq[i]] - node.depth.edgelength(tree)[parent[i]]) / max(node.depth.edgelength(tree))
+    
+    if (scale == F)parent_time[i] <- (node.depth.edgelength(tree)[node_seq[i]] - node.depth.edgelength(tree)[parent[i]])
   }
   
   N_seg <- length(node_seq) # total num segments in the tree
