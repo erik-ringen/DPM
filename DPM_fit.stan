@@ -68,6 +68,27 @@ matrix cov_drift(matrix A, matrix Q, real ts) {
   return(irow_mat);
 }
 
+// Function to convert from type real to type interger,when appropriate
+ int bin_search(real x, int min_val, int max_val){
+    // This assumes that min_val >= 0 is the minimum integer in range, 
+    //  max_val > min_val,
+    // and that x has already been rounded. 
+    //  It should find the integer equivalent to x.
+    int range = (max_val - min_val+1) %/% 2; // We add 1 to make sure that truncation doesn't exclude a number
+    int mid_pt = min_val + range;
+    int out;
+    while(range > 0) {
+      if(x == mid_pt){
+        out = mid_pt;
+        range = 0;
+      } else {
+        // figure out if range == 1
+        range =  (range+1) %/% 2; 
+        mid_pt = x > mid_pt ? mid_pt + range: mid_pt - range; 
+        }
+    }
+    return out;
+  }
 } // end of functions block
 
 
@@ -80,6 +101,7 @@ data{
   array[N_seg] int parent; // index of the parent node of each descendent
   vector[N_seg] ts; // time since parent
   vector[N_seg] tip; // indicator of whether a given segment ends in a tip
+  array[N_tips, J] real X;
 }
 
 parameters{
@@ -183,19 +205,13 @@ model{
   A_offdiag ~ std_normal();
   A_diag ~ std_normal();
   Q_diag ~ std_normal();
-}
-
-generated quantities{
-  array[N_tips,J] real X;
-
-  for (j in 1:J) {
   
-    if (resp_type[j] == 1) {
-      for (i in 1:N_tips) X[i,j] = normal_rng( eta[i,j], sigma_tips[i,j] );
+  for (j in 1:J) {
+      if (resp_type[j] == 1) {
+        for (i in 1:N_tips) (X[i,j] - eta[i,j]) ~ normal(0, sigma_tips[i,j]);
     }
-    
-    if (resp_type[j] == 2) {
-      for (i in 1:N_tips) X[i,j] = bernoulli_logit_rng( eta[i,j] + drift_tips[i,j] );
+      if (resp_type[j] == 2) {
+        for (i in 1:N_tips) bin_search(X[i,j], 0, 1) ~ bernoulli_logit(eta[i,j] + drift_tips[i,j]);
     }
-}
+  }
 }

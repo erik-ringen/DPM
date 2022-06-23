@@ -18,7 +18,7 @@ chop_tree <- function(tree, scale=T) {
   
   # Parent time indicates amount of time since the parent node, scaled by the total depth of the tree
   parent_time <- rep(NA, length(node_seq))
-  #parent_time[1] <- -99 # placeholder for ancestral state
+  parent_time[1] <- -99 # placeholder for ancestral state
   
   for (i in 2:length(parent_time)) {
     if (scale == T) parent_time[i] <- (node.depth.edgelength(tree)[node_seq[i]] - node.depth.edgelength(tree)[parent[i]]) / max(node.depth.edgelength(tree))
@@ -28,12 +28,18 @@ chop_tree <- function(tree, scale=T) {
   
   N_seg <- length(node_seq) # total num segments in the tree
   
+  # Indicate whether a node in the seq is a tip
+  N_tips <- length(tree$tip.label)
+  tip <- ifelse(node_seq > N_tips, 0, 1)
+  
   return(
     list(
+      N_tips = N_tips,
       N_seg = N_seg,
       node_seq = node_seq,
       parent = parent,
-      ts = parent_time
+      ts = parent_time,
+      tip = tip
       )
   )
 }
