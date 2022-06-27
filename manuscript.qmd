@@ -9,7 +9,15 @@ bibliography: references.bib
 
 Phylogenetic comparative methods (PCMs) are commonly used to study the co-evolution of traits, spanning topics such as anatomy and physiology [@garland2005phylogenetic; @oconnor2022immunity; @thayer2018impact], life history and behavior [@maclean2012does; @clayton1994comparative; @salguero2016fast; @bielby2007fast; @cornwallis2017cooperation], and cultural evolution [@mace2005phylogenetic; @watts2015broad]. "Co-evolution" refers to repeatable patterns of trait co-variation over evolutionary time, across species or across populations. In practice, co-evolution can be investigated using a diverse family of statistical techniques, depending on the research question and type of data available (Garamszegi, 2014a; Nunn, 2011).
 
-Trait co-evolution simply describes *how* traits change over time. This has value for understanding natural history and can stimulate new research questions. However, simply inferring that traits changed together in the past does not tell us *why* they changed, or how the traits would respond to intervention, i.e., causality. Nonetheless, researchers in ecology and evolution are often motivated to study trait co-evolution because they believe these patterns reflect causal relations.
+Trait co-evolution simply describes *how* traits change over time. Such descriptions have value for understanding natural history, ancestral state reconstruction (using the present to retrodict the past), and can stimulate new research questions. However, simply inferring that traits changed together in the past does not tell us *why* they changed, or how the traits would respond to intervention, i.e., causality. Nonetheless, researchers in ecology and evolution are often motivated to study trait co-evolution because they believe these patterns reflect causal relations. We briefly review some popular classes of PCM and their limitations with respect to causal inference.
+
+## "Static" PCMs
+
+Independent contrasts, PGLS, PGLMMs, PPA
+
+## "Dynamic" PCMs
+
+Pagel's discrete, Hidden Markov Models, Butler & King OU
 
 can be identified statistically as non-zero between-trait phylogenetic correlations----or any other measure of mutual information over evolutionary time.
 
