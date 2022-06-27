@@ -1,26 +1,22 @@
 ---
-title: "Causal inference for trait co-evolution using dynamic phylogenetic models"
+title: "Causal inference and co-evolutionary contingencies using dynamic phylogenetic models"
 format: html
 editor: visual
+bibliography: references.bib
 ---
 
 ## Introduction
 
-Co-evolution can be identified statistically as non-zero between-trait phylogenetic correlations----or any other measure of mutual information over evolutionary time. Trait co-evolution is of interest in ecology and evolution when phylogenetic correlations are thought to reflect directed, causal relationships between traits, or when correlated traits share common causes.
+Phylogenetic comparative methods (PCMs) are commonly used to study the co-evolution of traits, spanning topics such as anatomy and physiology [@garland2005phylogenetic; @oconnor2022immunity; @thayer2018impact], life history and behavior [@maclean2012does; @clayton1994comparative; @salguero2016fast; @bielby2007fast; @cornwallis2017cooperation], and cultural evolution [@mace2005phylogenetic; @watts2015broad]. "Co-evolution" refers to repeatable patterns of trait co-variation over evolutionary time, across species or across populations. In practice, co-evolution can be investigated using a diverse family of statistical techniques, depending on the research question and type of data available (Garamszegi, 2014a; Nunn, 2011).
 
-## Running Code
+Trait co-evolution simply describes *how* traits change over time. This has value for understanding natural history and can stimulate new research questions. However, simply inferring that traits changed together in the past does not tell us *why* they changed, or how the traits would respond to intervention, i.e., causality. Nonetheless, researchers in ecology and evolution are often motivated to study trait co-evolution because they believe these patterns reflect causal relations.
 
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+can be identified statistically as non-zero between-trait phylogenetic correlations----or any other measure of mutual information over evolutionary time.
 
-```{r}
-1 + 1
-```
+THREE SCENARIOS TO SIMULATE:
 
-You can add options to executable code like this
+\(1\) Confounding by third variable X_3 -\> X_2, X_3 -\> X_1
 
-```{r}
-#| echo: false
-2 * 2
-```
+\(2\) Correlated drift (CoV\[X_1,X_2\]) != 0)
 
-The `echo: false` option disables the printing of code (only output is displayed).
+\(3\) Including correlated drift (shrinking cross-effects)
