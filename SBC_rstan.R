@@ -58,4 +58,7 @@ write.csv(data.frame(A_1_2_rank, A_2_1_rank), file="SBC_ranks.csv")
 
 #ranks <- read.csv("SBC_ranks.csv")
 #off_diag_ranks <- cbind(ranks$A_1_2_rank, ranks$A_2_1_rank)
-#hist(off_diag_ranks/1200, breaks=100, main="", xlab="Rank (prop max)", col="skyblue", border=NA)
+#hist(off_diag_ranks/2000, breaks=100, main="", xlab="Rank (prop max)", col="skyblue", border=NA)
+
+#hist(off_diag_ranks[,1]/2001, breaks=30, main="", xlab="Rank (prop max)", col="skyblue", border=NA)
+

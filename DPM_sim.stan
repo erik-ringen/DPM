@@ -68,6 +68,14 @@ matrix cov_drift(matrix A, matrix Q, real ts) {
   return(irow_mat);
 }
 
+real normal_lub_rng(real mu, real sigma, real lb, real ub) {
+  real p_lb = normal_cdf(lb, mu, sigma);
+  real p_ub = normal_cdf(ub, mu, sigma);
+  real u = uniform_rng(p_lb, p_ub);
+  real y = mu + sigma * inv_Phi(u);
+  return y;
+}
+
 } // end of functions block
 
 
@@ -82,24 +90,32 @@ data{
   vector[N_seg] tip; // indicator of whether a given segment ends in a tip
 }
 
-parameters{
-vector<upper=0>[J] A_diag; // auto-regressive terms of A
-vector[J*J - J] A_offdiag; // 
-vector<lower=0>[J] Q_diag; // self drift terms
-vector[J] b; // intercepts ("bias")
-vector[J] eta_anc; // ancestral states
-matrix[N_seg - 1,J] z_drift; // stochastic drift, unscaled and uncorrelated
-}
-
-transformed parameters{
-matrix[N_seg,J] eta;
-matrix[J,J] Q; // "drift" matrix
-matrix[J,J] I; // identity matrix
-matrix[J,J] A;  // "selection" matrix
-matrix[N_seg,J] drift_tips; // terminal drift parameters, saved here to use in likelihood for Gaussian outcomes
-matrix[N_seg,J] sigma_tips; // terminal drift parameters, saved here to use in likelihood for Gaussian outcomes
-vector[J] Q_offdiag = rep_vector(0.0, J);
-
+generated quantities{
+  vector[J] A_diag;
+  vector[J*J - J] A_offdiag;
+  vector[J] Q_diag;
+  vector[J] b;
+  vector[J] eta_anc;
+  matrix[N_seg - 1, J] z_drift;
+  
+  matrix[N_seg,J] eta;
+  matrix[J,J] Q; // "drift" matrix
+  matrix[J,J] I; // identity matrix
+  matrix[J,J] A;  // "selection" matrix
+  matrix[N_seg,J] drift_tips; // terminal drift parameters, saved here to use in likelihood for Gaussian outcomes
+  matrix[N_seg,J] sigma_tips; // terminal drift parameters, saved here to use in likelihood for Gaussian outcomes
+  array[N_tips,J] real X;
+  vector[J] Q_offdiag = rep_vector(0.0, J);
+  
+    for (j in 1:J) {
+  A_diag[j] = normal_lub_rng(0,1,negative_infinity(), 0.0);
+  A_offdiag[j] = normal_rng(0,1);
+  Q_diag[j] = normal_lub_rng(0,1,0,positive_infinity());
+  b[j] = normal_rng(0,1);
+  eta_anc[j] = normal_rng(0,1);
+  for (i in 1:(N_seg - 1)) z_drift[i,j] = normal_rng(0,1);
+  }
+  
 // Fill A matrix //////////
 {
 int ticker = 1;
@@ -173,29 +189,17 @@ sigma_tips[node_seq[1],j] = -99; //
   }
 
   }
-
-} // end transformed parameters block
-
-model{
-  b ~ std_normal();
-  eta_anc ~ std_normal();
-  to_vector(z_drift) ~ std_normal();
-  A_offdiag ~ std_normal();
-  A_diag ~ std_normal();
-  Q_diag ~ std_normal();
-}
-
-generated quantities{
-  array[N_tips,J] real X;
-
-  for (j in 1:J) {
+  
+  ## Simulate observations
+    for (j in 1:J) {
   
     if (resp_type[j] == 1) {
-      for (i in 1:N_tips) X[i,j] = normal_rng( eta[i,j], sigma_tips[i,j] );
+      for (i in 1:N_tips) X[i,j] = eta[i,j] + normal_rng( 0, sigma_tips[i,j] );
     }
     
     if (resp_type[j] == 2) {
       for (i in 1:N_tips) X[i,j] = bernoulli_logit_rng( eta[i,j] + drift_tips[i,j] );
     }
 }
+  
 }
