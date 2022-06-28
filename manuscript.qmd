@@ -13,6 +13,45 @@ Trait co-evolution simply describes *how* traits change over time. Such descript
 
 ## "Static" PCMs
 
+Phylogenetic generalized least squares is a variant of linear regression that accounts for the covariance between species or populations due to shared evolutionary history (likewise for its predecessor, independent contrasts). The most commonly assumed model of evolution is Brownian motion, where trait X follows a random walk proportional to time ($t$), such that, for any $t$:
+
+$$ E[X] = 0 $$
+$$ \textrm{Var}[X] = \sigma^2 t $$
+Therefore, the variance for a given species or population $j$ is proportional to total branch length of the tree leading from root to tip, and the covariance between $j$ and any other species or population $k$ is proportional to their amount of shared history. For example, imagine a phylogeny with only $J$ = 3 tip species. The last common ancestor of all species is dated to T = 10,000 years ago, and the last common ancestor of 2 and 3 is dated to 0.5T = 5,000 years ago. The implied phylogenetic variance-covariance matrix ($V$) under a Brownian motion model is thus:
+
+$$ V = \sigma^2 \begin{bmatrix}
+T, & 0, & 0 \\
+0, & T, & 0.5T \\
+0, & 0.5T & T
+\end{bmatrix} $$
+
+Thus, the total variance for species 3 is the sum of its evolutionary history, $\sigma^2$[t(1,2,3) - t(2,3)] + $\sigma^2$[t(2,3) - t(3)] and the covariance between species 2 and 3 is equal to the sum of their *shared* evolutionary history $\sigma^2[t(2,3) - t(3)]$, which is always some fraction of the species total evolutionary time $T_j$. So long as the tree is ultrametric (all tips equidistant from the root), $T_j$ = $T ~\forall ~j \in J$. It is easier to interpret $\sigma$ when we first scale all times by the total tree length $T$. We will denote this scaled variance-covariance matrix as $V_s$
+
+$$ V_s = \frac{V}{T} = \sigma^2 \begin{bmatrix}
+1, & 0, & 0 \\
+0, & 1, & 0.5 \\
+0, & 0.5 & 1
+\end{bmatrix} $$
+
+
+While Brownian motion is the simplest case, in general $V$ is constructed using a matrix  
+
+All that is needed is a matrix of phylogenetic distances $D$ (i.e., time since species/populations diverged) and an assumed model of trait evolution (e.g., Brownian motion, Ornstein-Uhlenbeck, Early Burst). 
+
+$$
+ Y \sim \mathcal{N}(\boldsymbol{X}\beta, \boldsymbol{\Sigma}) \\
+ \boldsymbol{\Sigma} = \sigma^2(1-D) \\
+ V = \begin{bmatrix}  \end{bmatrix}
+$$
+
+Where $\boldsymbol{X}$ is a design matrix of predictors and $\beta$ is a vector of regression coefficients. The strength of the covariance between related species is controlled by the scalar $\lambda \in [0,1]$. We scale the distance matrix $D$ by the total length of phylogeny so that taking the complement 1 - $D$ gives us the phylogenetic covariance matrix expected under a Brownian motion model.
+
+and an assumed model of trait evolution (e.g., Brownian motion, Ornstein-Uhlenbeck, Early-Burst)
+
+A sample For example,
+
+Phylogenetic generalized multilevel models (PGLMMs) extend this analytic strategy, accommodating more complex, multivariate model designs [@ives2010phylogenetic; @ives2011generalized]. While the terminology is not always consistent in the literature, note that "phylogenetic correlation" refers to a . A residual correlation refers to the remaining trait covariance *after* accounting for similarity due to shared evolutionary history. The residual correlations derived from PCMs are often interpreted as evidence for convergent evolution, adjusted for statistical non-independence and confounding due to phylogeny.
+
 Independent contrasts, PGLS, PGLMMs, PPA
 
 ## "Dynamic" PCMs
