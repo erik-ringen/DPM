@@ -7,52 +7,69 @@ bibliography: references.bib
 
 ## Introduction
 
-Phylogenetic comparative methods (PCMs) are commonly used to study the co-evolution of traits, spanning topics such as anatomy and physiology [@garland2005phylogenetic; @oconnor2022immunity; @thayer2018impact], life history and behavior [@maclean2012does; @clayton1994comparative; @salguero2016fast; @bielby2007fast; @cornwallis2017cooperation], and cultural evolution [@mace2005phylogenetic; @watts2015broad]. "Co-evolution" refers to repeatable patterns of trait co-variation over evolutionary time, across species or across populations. In practice, co-evolution can be investigated using a diverse family of statistical techniques, depending on the research question and type of data available (Garamszegi, 2014a; Nunn, 2011).
+Phylogenetic comparative methods (PCMs) are commonly used to study the co-evolution of organismal traits, spanning topics such as anatomy and physiology [@garland2005phylogenetic; @oconnor2022immunity; @thayer2018impact; @navalon2019evolutionary; @dunn2015evolutionary], life history and behavior [@maclean2012does; @clayton1994comparative; @salguero2016fast; @bielby2007fast; @cornwallis2017cooperation; @wilkinson2019recurrent], and cultural evolution [@mace2005phylogenetic; @watts2015broad; @navarrete2016coevolution]. "Co-evolution" refers to repeatable patterns of trait co-variation over evolutionary time, across species or across populations. In practice, co-evolution can be investigated using a diverse family of statistical techniques, depending on the research question and type of data available (Garamszegi, 2014a; Nunn, 2011).
 
 Trait co-evolution simply describes *how* traits change over time. Such descriptions have value for understanding natural history, ancestral state reconstruction (using the present to retrodict the past), and can stimulate new research questions. However, simply inferring that traits changed together in the past does not tell us *why* they changed, or how the traits would respond to intervention, i.e., causality. Nonetheless, researchers in ecology and evolution are often motivated to study trait co-evolution because they believe these patterns reflect causal relations. We briefly review some popular classes of PCM and their limitations with respect to causal inference.
 
 ## "Static" PCMs
 
-Phylogenetic generalized least squares is a variant of linear regression that accounts for the covariance between species or populations due to shared evolutionary history (likewise for its predecessor, independent contrasts). The most commonly assumed model of evolution is Brownian motion, where trait X follows a random walk proportional to time ($t$), such that, for any $t$:
+### Phylogenetic Generalized Least Squares (PGLS)
+
+Phylogenetic generalized least squares (PGLS) is a variant of linear regression that accounts for the covariance between species or populations due to shared evolutionary history (likewise for its predecessor, independent contrasts) [@grafen1989phylogenetic; @symonds2014primer; @blomberg2012independent]. PGLS is defined as:
+
+$$Y \sim \mathcal{N}(\boldsymbol{X}\beta, \boldsymbol{\Sigma})$$
+$$\boldsymbol{\Sigma} = \sigma^2\boldsymbol{V} $$
+ 
+Where $\boldsymbol{Y}$ is the outcome, $\boldsymbol{X}$ is a design matrix of predictors, $\beta$ is a vector of regression coefficients, and $\sigma^2$ is the variance. The covariance between related species is proportional to the off-diagonals of the phylogenetic variance-covariance matrix $\boldsymbol{V}$. To construct $\boldsymbol{V}$, we need (1) a matrix of patristic distances between species (i.e., time since divergence from last common ancestor) and (2) an assumed model of trait evolution.
+
+The most commonly assumed model is Brownian motion, where trait X follows a random walk proportional to time ($t$), such that, for any $t$:
 
 $$ E[X] = 0 $$
 $$ \textrm{Var}[X] = \sigma^2 t $$
-Therefore, the variance for a given species or population $j$ is proportional to total branch length of the tree leading from root to tip, and the covariance between $j$ and any other species or population $k$ is proportional to their amount of shared history. For example, imagine a phylogeny with only $J$ = 3 tip species. The last common ancestor of all species is dated to T = 10,000 years ago, and the last common ancestor of 2 and 3 is dated to 0.5T = 5,000 years ago. The implied phylogenetic variance-covariance matrix ($V$) under a Brownian motion model is thus:
+Therefore, the variance for a given species or population $j$ is proportional to total branch length of the tree leading from root to tip, and the covariance between $j$ and any other species or population $k$ is proportional to their amount of shared history. For example, imagine a phylogeny with only $J$ = 3 tip species. The last common ancestor of all species is dated to T = 10,000 years ago, and the last common ancestor of 2 and 3 is dated to 0.5T = 5,000 years ago. The implied phylogenetic variance-covariance matrix ($\boldsymbol{V}$) under a Brownian motion model is thus:
 
-$$ V = \sigma^2 \begin{bmatrix}
+$$ \boldsymbol{V} = \sigma^2 \begin{bmatrix}
 T, & 0, & 0 \\
 0, & T, & 0.5T \\
-0, & 0.5T & T
+0, & 0.5T, & T
 \end{bmatrix} $$
 
-Thus, the total variance for species 3 is the sum of its evolutionary history, $\sigma^2$[t(1,2,3) - t(2,3)] + $\sigma^2$[t(2,3) - t(3)] and the covariance between species 2 and 3 is equal to the sum of their *shared* evolutionary history $\sigma^2[t(2,3) - t(3)]$, which is always some fraction of the species total evolutionary time $T_j$. So long as the tree is ultrametric (all tips equidistant from the root), $T_j$ = $T ~\forall ~j \in J$. It is easier to interpret $\sigma$ when we first scale all times by the total tree length $T$. We will denote this scaled variance-covariance matrix as $V_s$
+Thus, the total variance for species 3 is the sum of its evolutionary history, $\sigma^2[t(2,3)] + \sigma^2[t(3) - t(2,3)]$ and the covariance between species 2 and 3 is equal to the sum of their *shared* evolutionary history $\sigma^2[t(2,3)]$ (the tree time for their most recent common ancestor), which is always some fraction of the species total evolutionary time $T_j$. If the tree is ultrametric (all tips equidistant from the root), $T_j$ = $T ~\forall ~j \in J$. 
 
-$$ V_s = \frac{V}{T} = \sigma^2 \begin{bmatrix}
+$\sigma$ is easier to interpret when we first scale all times by the total tree length $T$. We will denote such a scaled variance-covariance matrix as $\boldsymbol{V}_s$:
+
+$$ \boldsymbol{V}_s = \frac{\boldsymbol{V}}{T} = \sigma^2 \begin{bmatrix}
 1, & 0, & 0 \\
 0, & 1, & 0.5 \\
-0, & 0.5 & 1
+0, & 0.5, & 1
 \end{bmatrix} $$
 
+Empirically, the actual degree of covariance between related species or populations may be less than expected under a pure Brownian motion model. For example, when evolution is rapid (or more mundanely, when measurement error on trait data is substantial) the "phylogenetic signal" will be weak such that even closely related taxa may have dramatically different trait values [@blomberg2003testing; @kamilar2013phylogenetic]. PGLS can estimate the strength of phylogenetic signal from comparative data, multiplying the off-diagonals of the variance-covariance matrix by $\lambda \in [0,1]$. For example:
 
-While Brownian motion is the simplest case, in general $V$ is constructed using a matrix  
+$$ \boldsymbol{V_s} = \sigma^2 \begin{bmatrix}
+1, & 0, & 0 \\
+0, & 1, & \lambda0.5 \\
+0, & \lambda0.5, & 1
+\end{bmatrix} $$
 
-All that is needed is a matrix of phylogenetic distances $D$ (i.e., time since species/populations diverged) and an assumed model of trait evolution (e.g., Brownian motion, Ornstein-Uhlenbeck, Early Burst). 
+This scaling is often referred to as a "branch length transformation," because shrinking the off-diagonals (shared evolutionary history) while holding the diagonals constant (independent evolution) is equivalent to "stretching" the terminal branches leading to the tips and "squishing" the past co-evolutionary branches. $\lambda = 1$ indicates that the phylogenetic strength is as strong as expected under a Brownian motion model, while lower values means that a lower proportion of the trait variance can be attributed to shared evolutionary history. At the extreme of $\lambda = 0$, $\boldsymbol{V}_s$ becomes an identity matrix and PGLS reduces to standard least squares regression.
 
-$$
- Y \sim \mathcal{N}(\boldsymbol{X}\beta, \boldsymbol{\Sigma}) \\
- \boldsymbol{\Sigma} = \sigma^2(1-D) \\
- V = \begin{bmatrix}  \end{bmatrix}
-$$
+Brownian motion is the simplest and most widely used model, and often interpreted as "drift" across the phylogenetic tree. Other popular choices include Ornstein-Uhlenbeck, where change due is due to both random drift and "stabilizing selection" towards some optimal trait value, and Early Burst models of adaptive radiation where the rate of change ($\sigma$) decreases over time. In general, $\boldsymbol{V}$ is constructed by inputting a matrix of phylogenetic distances to some covariance function $C(x,x')$ such that $V_{[j,k]} = C(j,k)$.
 
-Where $\boldsymbol{X}$ is a design matrix of predictors and $\beta$ is a vector of regression coefficients. The strength of the covariance between related species is controlled by the scalar $\lambda \in [0,1]$. We scale the distance matrix $D$ by the total length of phylogeny so that taking the complement 1 - $D$ gives us the phylogenetic covariance matrix expected under a Brownian motion model.
 
-and an assumed model of trait evolution (e.g., Brownian motion, Ornstein-Uhlenbeck, Early-Burst)
 
-A sample For example,
+
+PGLMMs $\lambda$ is equivalent to R^2.
+
+### Phylogenetinc Generalized Multilevel Models
 
 Phylogenetic generalized multilevel models (PGLMMs) extend this analytic strategy, accommodating more complex, multivariate model designs [@ives2010phylogenetic; @ives2011generalized]. While the terminology is not always consistent in the literature, note that "phylogenetic correlation" refers to a . A residual correlation refers to the remaining trait covariance *after* accounting for similarity due to shared evolutionary history. The residual correlations derived from PCMs are often interpreted as evidence for convergent evolution, adjusted for statistical non-independence and confounding due to phylogeny.
 
 Independent contrasts, PGLS, PGLMMs, PPA
+
+
+Discrete data can be modeled in the GLMMM framework if we conceptualize discrete phenotypes (binary, ordinal, categorical) as manifestations of a latent continuous trait, as in the quantitative genetic threshold model [@wright1934; @felsenstein2005using].
+
 
 ## "Dynamic" PCMs
 
