@@ -15,16 +15,38 @@ Trait co-evolution simply describes *how* traits change over time. Such descript
 
 Static PCMs quantify co-evolution between traits using the evolutionary regression or correlation coefficient [@pagel1993seeking]. The evolutionary regression coefficient is an undirected association between traits over evolutionary time is $b = \frac{\sigma(X,Y)}{\sigma^2(X)}$, and the evolutionary correlation coefficient is the standardized coefficient $\rho = \frac{\sigma(X,Y)}{\sigma(X)\sigma(Y)}$ which can be interpreted as "a one standard deviation increase in trait $X$ is associated with a $\rho$ standard deviation change in trait $Y$."
 
-PHYLOGENETIC POSITION CAN BE THOUGHT OF AS A CONTINOUS CATEGORICAL RANDOM VARIABLE
+#### When can be interpret the evolutionary regression as a causal effect?
+
+```{r, message=FALSE, warning=FALSE}
+require(rethinking)
+require(dagitty)
+
+phy_no_confound <- dagitty( "dag {
+                            PHY -> Y
+                            X -> Y
+                            }")
+
+phy_confound <- dagitty( "dag {
+                            PHY -> Y
+                            PHY -> X
+                            X -> Y
+                            }")
+  
+par(mfrow=c(1,2))
+drawdag(phy_no_confound)
+drawdag(phy_confound)
+  
+```
+To understand when the evolutionary regression coefficient can be interpreted as a causal effect, we must first clarify what "causality" means. Following Pearl (some citations), we say that $X$ is a cause of $Y$ when $Pr(Y|do(X = x)) \neq Pr(Y|do(X = \textrm{not x}))$. The do() operator represents an *intervention* in which the value of some variable is fixed (for example, through assignment in a randomized experiment). If the probability distribution of $Y$ changes based on the value of $X$ that is assigned, then $X$ has a causal effect on $Y$. Note here that $X$ refers to a random variable while $x$ refers to some unit value of that variable.
 
 ### Phylogenetic Generalized Least Squares (PGLS)
 
-Phylogenetic generalized least squares (PGLS) is a variant of linear regression that accounts for the covariance between species or populations due to shared evolutionary history (likewise for its predecessor, independent contrasts) [@grafen1989phylogenetic; @symonds2014primer; @blomberg2012independent]. PGLS is defined as:
+Phylogenetic generalized least squares (PGLS) is a variant of linear regression that accounts for the covariance between species or populations due to shared evolutionary history (likewise for its predecessor, independent contrasts) [@grafen1989phylogenetic; @symonds2014primer; @blomberg2012independent]. Given some outcome $Y$ and a co-evolutionary predictor $X$, an observation $i$ from species or population $j$ is modeled as:
 
-$$Y \sim \mathcal{N}(\boldsymbol{X}\beta, \boldsymbol{\Sigma})$$
+$$y_{ij} = \beta_0 + \beta_xx_{ij} + \epsilon_{ij}$$
+$$ \epsilon \sim  \mathcal{N}(0, \boldsymbol{\Sigma})$$
 $$\boldsymbol{\Sigma} = \sigma^2\boldsymbol{V} $$
- 
-Where $\boldsymbol{Y}$ is the outcome, $\boldsymbol{X}$ is a design matrix of predictors, $\beta$ is a vector of regression coefficients, and $\sigma^2$ is the variance. $\mathcal{N}$ denotes a normal or Gaussian probability density function. The covariance between related species is proportional to the off-diagonals of the phylogenetic variance-covariance matrix $\boldsymbol{V}$. To construct $\boldsymbol{V}$, we need (1) a matrix of patristic distances between species (i.e., time since divergence from last common ancestor) and (2) an assumed model of trait evolution.
+Where $\mathcal{N}$ denotes a normal or Gaussian probability density function and $\sigma^2$ is the variance of $Y$ conditional on $X$. $\beta_x$ is an estimator of the evolutionary regression coefficient that takes into account the phylogenetic non-independence between tip species. The covariance between related species is proportional to the off-diagonals of the phylogenetic variance-covariance matrix $\boldsymbol{V}$. To construct $\boldsymbol{V}$, we need (1) a matrix of patristic distances between species (i.e., time since divergence from last common ancestor) and (2) an assumed model of trait evolution.
 
 The most commonly assumed model is Brownian motion (also called the Wiener process and thus denoted $W$), where $W$ follows a random walk proportional to time ($T$), such that, for any time $t$:
 
@@ -55,15 +77,29 @@ $$ \boldsymbol{V_s} = \sigma^2 \begin{bmatrix}
 0, & \lambda0.5, & 1
 \end{bmatrix} $$
 
-This scaling is often referred to as a "branch length transformation," because shrinking the off-diagonals (shared evolutionary history) while holding the diagonals constant (independent evolution) is equivalent to "stretching" the terminal branches leading to the tips and "shrinking" the past co-evolutionary branches. $\lambda = 1$ indicates that the phylogenetic strength is as strong as expected under a Brownian motion model, while lower values means that a lower proportion of the trait variance can be attributed to shared evolutionary history. At the extreme of $\lambda = 0$, $\boldsymbol{V}_s$ becomes an identity matrix and PGLS reduces to standard least squares regression.
+This scaling is often referred to a≠s a "branch length transformation," because shrinking the off-diagonals (shared evolutionary history) while holding the diagonals constant (independent evolution) is equivalent to "stretching" the terminal branches leading to the tips and "shrinking" the past co-evolutionary branches. $\lambda = 1$ indicates that the phylogenetic strength is as strong as expected under a Brownian motion model, while lower values means that a lower proportion of the trait variance can be attributed to shared evolutionary history. At the extreme of $\lambda = 0$, $\boldsymbol{V}_s$ becomes an identity matrix and PGLS reduces to standard least squares regression.
 
 Brownian motion is the simplest and most widely used model, and often interpreted as "drift" across the phylogenetic tree. Other popular choices include Ornstein-Uhlenbeck, where change due is due to both random drift and "stabilizing selection" towards some optimal trait value, and Early Burst models of adaptive radiation where the rate of change ($\sigma$) decreases over time. In general, $\boldsymbol{V}$ is constructed by inputting a matrix of phylogenetic distances to some covariance function $C(x,x')$ such that $V_{[j,k]} = C(j,k)$.
 
-To recap, $\beta$ is an estimator of the evolutionary regression coefficient that takes into account the phylogenetic non-independence between tip species. Although PGLS is widely used in comparative biology, it has key limitations such as: assumption of Gaussian errors, prone to overfitting due to lack of parameter regularization, and cannot accommodate many common data structures including repeated measures of species trait values, missing data, and measurement error. In the next section we review more flexible regression approaches, as well as an important alternative method of estimating evolutionary associations.
+Although PGLS is widely used in comparative biology, it has key limitations such as: assumption of Gaussian errors, prone to overfitting due to lack of parameter regularization, and cannot accommodate many common data structures including repeated measures of species trait values, missing data, and measurement error. In the next section we review more flexible regression approaches, as well as an important alternative method of estimating evolutionary associations.
 
 ### Phylogenetic Generalized Multilevel Models
 
-Phylogenetic generalized multilevel models (PGLMMs) extend this analytic strategy, accommodating more complex, multivariate model designs [@ives2010phylogenetic; @ives2011generalized]. 
+Phylogenetic generalized multilevel models (PGLMMs) extend the study of trait coevolution, leveraging analytic strategies developed in quantitative genetics to accommodate more complex, multivariate model designs with non-Gaussian outcomes [@hadfield2010general; @ives2010phylogenetic; @ives2011generalized]. Rather than explicitly scaling the off-diagonals of $\boldsymbol{V}_s$ with some parameter $\lambda$, phylogenetic signal is quantified as the ratio of the variance of phylogenetic random effects $\nu$ (also called 'mixed' and 'varying' effects) to total trait variance. For example, an observation of a Gaussian trait $Y$ from a species or population $j$ and predictor $X$ is modeled as:
+
+$$ y_{i,j} = \beta_0 + \beta_{x} x_{ij} + \nu_{j} + \epsilon_{ij} \\$$
+$$ \nu \sim \mathcal{N}(0,\boldsymbol{\Sigma}_{\nu}) \\$$
+$$\epsilon_{ij} \sim \mathcal{N}(0,\boldsymbol{\Sigma}_{\epsilon}) \\$$
+$$\boldsymbol{\Sigma}_{\nu} = \sigma^2_{\nu}\boldsymbol{V}_s \\$$
+$$\boldsymbol{\Sigma}_{\epsilon} = \sigma^2_{\epsilon}\boldsymbol{I} \\$$
+
+Where $\boldsymbol{I}$ is an identity matrix and thus the residuals $\epsilon$ are assumed conditionally independent. The "phylogenetic signal" is now estimated as $\lambda_{\textrm{PGLMM}} = \frac{\sigma_{\nu}^2}{\sigma_{\nu}^2 + \sigma_{\epsilon}^2}$ (adjusted for $X$) and equivalent to $\lambda_{\textrm{PGLS}}$, but with the greater flexibility afforded by PGLMMs. $\lambda_{\textrm{PGLMM}}$ is also sometimes referred to as "phylogenetic heritability" [@hadfield2010general].
+
+In this model, $\beta_{x(\textrm{PGLMM})}$ has the same interpretation as $\beta_{x(\textrm{PGLS})}$. If the response was non-Gaussian, $\beta_{x(\textrm{PGLS})}$ has the same interpretation *on the latent scale*. Conversion of the phylogenetic regression coefficient $\beta_{x(\textrm{PGLMM})}$ to the observation scale requires inverting the link function, and will be sensitive to other model parameters.
+
+#### Phylogenetic Path Analysis & Causal Inference
+
+
 
 
 While the terminology is not always consistent in the literature, note that "phylogenetic correlation" refers to a . A residual correlation refers to the remaining trait covariance *after* accounting for similarity due to shared evolutionary history. The residual correlations derived from PCMs are often interpreted as evidence for convergent evolution, adjusted for statistical non-independence and confounding due to phylogeny.
