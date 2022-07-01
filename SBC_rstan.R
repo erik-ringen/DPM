@@ -10,6 +10,7 @@ N_tips <- 25
 A_1_2_rank <- c()
 A_2_1_rank <- c()
 
+
 # Compile stan models
 sim_mod <- stan_model(file="DPM_sim.stan")
 fit_mod <- stan_model(file="DPM_fit.stan")
