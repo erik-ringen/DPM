@@ -11,6 +11,15 @@ Phylogenetic comparative methods (PCMs) are commonly used to study the co-evolut
 
 Trait co-evolution simply describes *how* traits change over time. Such descriptions have value for understanding natural history, ancestral state reconstruction (using the present to retrodict the past), and can stimulate new research questions. However, simply inferring that traits changed together in the past does not tell us *why* they changed, or how the traits would respond to intervention, i.e., causality. Nonetheless, researchers in ecology and evolution are often motivated to study trait co-evolution because they believe these patterns reflect causal relations. We briefly review some popular classes of PCM and their limitations with respect to causal inference, before introducing a new method which overcomes some of these limitations.
 
+TWO different reasons to "adjust for phylogeny"
+
+(1) Repeated measures of closely-related species, non-independence (std errors too small)
+
+(2) Clustering in multivariate data can lead to confounding due to sampling variation. Type I (between-cluster sampling variation leads to spurious correlation) and Type II error (between cluster sampling variation leads to underestimated correlation).
+
+
+Why would we care about the phylogenetic correlation? Because this is an indicator that the traits co-evolve across the phylogenetic tree rather than just at the tips. 
+
 ## "Static" PCMs
 
 Static PCMs quantify co-evolution between traits using the evolutionary regression or correlation coefficient [@pagel1993seeking]. The evolutionary regression coefficient is an undirected association between traits over evolutionary time is $b = \frac{\sigma(X,Y)}{\sigma^2(X)}$, and the evolutionary correlation coefficient is the standardized coefficient $\rho = \frac{\sigma(X,Y)}{\sigma(X)\sigma(Y)}$ which can be interpreted as "a one standard deviation increase in trait $X$ is associated with a $\rho$ standard deviation change in trait $Y$."
@@ -38,7 +47,7 @@ drawdag(phy_confound)
   
 ```
 
-To understand when the evolutionary regression coefficient can be interpreted as a causal effect, we must first clarify what "causality" means. Following Pearl (some citations), we say that $X$ is a cause of $Y$ when $Pr(Y|do(X = x)) \neq Pr(Y|do(X = \textrm{not x}))$. The do() operator represents an *intervention* in which the value of some variable is fixed (for example, through assignment in a randomized experiment). If the probability distribution of $Y$ changes based on the value of $X$ that is assigned, then $X$ has a causal effect on $Y$. Note here that $X$ refers to some variable while $x$ refers to some unit value of that variable.
+To understand when the evolutionary regression coefficient can be interpreted as a causal effect, we must first clarify what "causality" means. Following Pearl (some citations), we say that $X$ is a cause of $Y$ when $Pr(Y|do(X = x)) \neq Pr(Y|do(X = \textrm{not x}))$. The do() operator represents an *intervention* in which the value of some variable is fixed (for example, through assignment in a randomized experiment). If the probability distribution of $Y$ is sensitive to the value of $X$ that is assigned, then $X$ has a causal effect on $Y$. Note here that $X$ refers to a random variable while $x$ refers to some realized unit value of that variable.
 
 ### Phylogenetic Generalized Least Squares (PGLS)
 
@@ -82,13 +91,17 @@ Although PGLS is widely used in comparative biology, it has several key limitati
 
 ### Phylogenetic Generalized Multilevel Models
 
-Phylogenetic generalized multilevel (or mixed-effects) models (PGLMMs) extend the study of trait coevolution by leveraging analytic strategies developed in quantitative genetics to accommodate more complex, multivariate model designs with non-Gaussian outcomes [@hadfield2010general; @ives2010phylogenetic; @ives2011generalized] <!--# there's also Lynch 1991 METHODS FOR THE ANALYSIS OF COMPARATIVE DATA IN EVOLUTIONARY BIOLOGY, Evolution -->. Rather than explicitly scaling the off-diagonals of $\boldsymbol{V}_s$ with some parameter $\lambda$, phylogenetic signal is quantified as the ratio of the variance of phylogenetic random effects $\nu$ (also called 'mixed' or 'varying' effects) to total trait variance. For example, an observation of a Gaussian trait $Y$ from a species or population $j$ and predictor $X$ is modeled as:
+Phylogenetic generalized multilevel (or mixed-effects) models (PGLMMs) extend the study of trait coevolution by leveraging analytic strategies developed in quantitative genetics to accommodate more complex, multivariate model designs with non-Gaussian outcomes [@lynch1991methods; @hadfield2010general; @ives2010phylogenetic; @ives2011generalized] <!--# there's also Lynch 1991 METHODS FOR THE ANALYSIS OF COMPARATIVE DATA IN EVOLUTIONARY BIOLOGY, Evolution -->. Rather than explicitly scaling the off-diagonals of $\boldsymbol{V}_s$ with some parameter $\lambda$, phylogenetic signal is quantified as the ratio of the variance of phylogenetic random effects $\nu$ (also called 'mixed' or 'varying' effects) to total trait variance. For example, an observation of a Gaussian trait $Y$ from a species or population $j$ and predictor $X$ is modeled as:
 
 $$ y_{i,j} = \beta_0 + \beta_{x} x_{ij} + \nu_{j} + \epsilon_{ij} \\$$ $$ \nu \sim \mathcal{N}(0,\boldsymbol{\Sigma}_{\nu}) \\$$ $$\epsilon_{ij} \sim \mathcal{N}(0,\boldsymbol{\Sigma}_{\epsilon}) \\$$ $$\boldsymbol{\Sigma}_{\nu} = \sigma^2_{\nu}\boldsymbol{V}_s \\$$ $$\boldsymbol{\Sigma}_{\epsilon} = \sigma^2_{\epsilon}\boldsymbol{I} \\$$
 
 Where $\boldsymbol{I}$ is an identity matrix and thus the residuals $\epsilon$ are assumed conditionally independent. The "phylogenetic signal" is now estimated as $\lambda_{\textrm{PGLMM}} = \frac{\sigma_{\nu}^2}{\sigma_{\nu}^2 + \sigma_{\epsilon}^2}$ (adjusted for $X$) and equivalent to $\lambda_{\textrm{PGLS}}$, but with the greater flexibility afforded by PGLMMs. $\lambda_{\textrm{PGLMM}}$ is also sometimes referred to as "phylogenetic heritability" [@hadfield2010general], since it is calculated in the same way as heritability based on pedigrees in quantitative genetics.
 
 In this model, $\beta_{x(\textrm{PGLMM})}$ has the same interpretation as $\beta_{x(\textrm{PGLS})}$. If the response was non-Gaussian, $\beta_{x(\textrm{PGLS})}$ has the same interpretation *on the latent scale*. Conversion of the phylogenetic regression coefficient $\beta_{x(\textrm{PGLMM})}$ to the observation scale requires inverting the link function, and will be sensitive to other model parameters.
+
+#### Multivariate PGLMMs
+
+Residual and phylogenetic correlations can be different! Why? Plasticity and/or microevolutionary response to X may not be the same as the macroevolutionary process, a violation of *ergodicity*. or correlated measurement error.
 
 #### Phylogenetic Path Analysis & Causal Inference
 
