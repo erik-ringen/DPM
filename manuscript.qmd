@@ -9,45 +9,63 @@ bibliography: references.bib
 
 Phylogenetic comparative methods (PCMs) are commonly used to study the co-evolution of organismal traits, spanning topics such as anatomy and physiology [@garland2005phylogenetic; @oconnor2022immunity; @thayer2018impact; @navalon2019evolutionary; @dunn2015evolutionary], life history and behavior [@maclean2012does; @clayton1994comparative; @salguero2016fast; @bielby2007fast; @cornwallis2017cooperation; @wilkinson2019recurrent], and cultural evolution [@mace2005phylogenetic; @watts2015broad; @navarrete2016coevolution]. "Co-evolution" refers to repeatable patterns of trait co-variation over evolutionary time, across species or across populations. In practice, co-evolution can be investigated using a diverse family of statistical techniques, depending on the research question and type of data available [@harvey1991comparative; @garamszegi2014modern; @nunn2011comparative].
 
-Trait co-evolution simply describes *how* traits change over time. Such descriptions have value for understanding natural history, ancestral state reconstruction (using the present to retrodict the past), and can stimulate new research questions. However, simply inferring that traits changed together in the past does not tell us *why* they changed, or how the traits would respond to intervention, i.e., causality. Nonetheless, researchers in ecology and evolution are often motivated to study trait co-evolution because they believe these patterns reflect causal relations. We briefly review some popular classes of PCM and their limitations with respect to causal inference, before introducing a new method which overcomes some of these limitations.
+Trait co-evolution simply describes *how* traits change over time. Such descriptions have value for understanding natural history, ancestral state reconstruction (using the present to retrodict the past), and can stimulate new research questions. However, simply inferring that traits changed together in the past does not tell us *why* they changed, or how the traits would respond to intervention. In short, evolutionary correlation does not imply evolutionary causation. Nonetheless, researchers in ecology and evolution are often motivated to study trait co-evolution because they believe these patterns reflect causal relations. While some authors use paradigms such as phylogenetic path analysis to justify their models and make their causal assumptions explicit, many others refrain from stating their assumptions at all, despite drawing implicit causal conclusions. Ambiguity about causal inference can lead to misleading claims and contradictory results, undermining the perceived value and reliability of comparative approaches in biology.
 
-TWO different reasons to "adjust for phylogeny"
+A major barrier to incorporating causal inference into study design, analysis, and interpretation is that the causal assumptions baked into popular PCMs are not always apparent to the end users (researchers). For example, the most widely used model of trait evolution in PCMs (Brownian motion) assumes a purely neutral model of evolution with a constant rate of drift over the entire phylogenetic tree. Another example is that, for virtually all models of the co-evolution of continuous traits, effects can only be interpreted causally if we assume that we have the direction of causality right (X -> Y, not Y -> X), and that there is no reciprocal causation. 
 
-(1) Repeated measures of closely-related species, non-independence (std errors too small)
+In this article, we first review some popular classes of PCM and their assumptions and limitations with respect to causal inference. We then introduce a new method which overcomes some of these limitations and enables the study of directional trait co-evolution for an arbitrary number of traits that can be used with any type of data (continuous, discrete, ordered).
 
-(2) Clustering in multivariate data can lead to confounding due to sampling variation. Type I (between-cluster sampling variation leads to spurious correlation) and Type II error (between cluster sampling variation leads to underestimated correlation).
+## Co-evolution as correlated drift: the evolutionary regression coefficient
+
+The most common way to quantify co-evolution between traits is the evolutionary regression coefficient [@pagel1993seeking]. The evolutionary regression coefficient is a measure of association between traits over evolutionary time, $b = \frac{\sigma(X,Y)}{\sigma^2(X)}$. It can be interpreted as "a one unit increase in trait $X$ is associated with a $b$ unit change in trait $Y$." When can we interpret these statistics as causal effects? The short answer is...almost never! To explain why, we sketch out assumptions needed to map an evolutionary regression coefficient onto a causal estimand.
+
+First, what do we mean by causal? Following Pearl (some citations), we say that $X$ is a cause of $Y$ when $P(Y|do(X = x)) \neq P(Y|do(X = \textrm{not x}))$. The do($\dot$) operator represents an *intervention* in which the value of some variable is fixed (for example, through assignment in a randomized experiment). This is an inclusive definition, where if the probability distribution $P(Y)$ is sensitive to the value of $X$ that is assigned, then $X$ has a causal effect on $Y$. Note here that $X$ refers to a random variable while $x$ refers to some realized unit value of that variable. In any observational study, we cannot directly access $P(Y|do(X = x))$. Instead, we have just have the condition probability of $Y$ given $X$, $P(Y|X)$. Pearl and colleagues' "do calculus" is a set of rules that tells us under what conditions $P(Y|do(X)) = P(Y|X)$, or when we can make them equivalent by adjustment for other variables $P(Y|do(X),Z) = P(Y|X,Z)$. An *estimand* is a unit specific estimate such as "what would we expect species $i$ trait value $y_i$ to be if $x_i$ took on a given value?". Under a particular set of causal and parameteric assumptions, a regression coefficient $b$ can be interpeted as the estimand "what is the difference in the expected (mean) value of $Y$ if $x = 1$ vs $x = 0~$?", or $E[Y|x=1] - E[Y|x=0]$.
+
+An unitiuitive aspect of phylogenetic comparative methods is that cross-sections of species traits are used as an estimate of the *change* in $Y$ in response $X$. After all, we have only observed current trait values, not their evolution over time. It is unituitive not because it is incorrect in principle, but because it requires the reseracher to make a series of strong assumptions that may be in conflict with the stated research question. Following [@pagel1993seeking], we define a causal model of trait co-evolution in which we would be justified in interpreting the evolutionary regression coefficient as a causal effect. The model is defined below and depicted graphically in Figure 1.
+
+Given a time series of trait evolution with $T$ time points, $\forall ~t \in T$ 
+
+$$ x_t = x_{t-1} + \epsilon_{x,t}$$
+$$ y_t = y_{t-1} + b(x_t - x_{t-1}) + \epsilon_{y,t} = y_{t-1} + b\epsilon_{x,t} + \epsilon_{y,t} $$
+$$ \epsilon_{x,t} \sim \mathcal{N}(0,\sigma_x^2) $$
+$$ \epsilon_{y,t} \sim \mathcal{N}(0,\sigma_y^2) $$
+Expressed as discrete time difference equations:
+
+$$ \Delta x_t =  \epsilon_{x,t}$$
+$$ \Delta y_t = b\epsilon_{x,t} + \epsilon_{y,t}$$
+This model assumes that all change in trait $X$ is due to random drift $\epsilon_x$. Likewise, change in trait $Y$ is due to independent drift $\epsilon_y$ and response to *changes* in $X$. There is no directional change over time, and the evolution of both traits is state-independent (i.e., $Y$ has an invariant response to drift in $X$, regardless of how high or low it is). We can relax some assumptions, such as constant $\sigma$ and $\b$ over time, and still get unbiased estimates of $b$ using a cross-sectional regression of species. Additionally, if $Y$ has a non-linear response to $\epsilon_x$, then $b$ will still be a valid estimate of the linear component--albeit now possibly misleading if the total response exhibits strong non-linearity. But if either trait is under selection (i.e., the edges between $Y_t$ and $Y_{t+1}$ or between $X_t$ and $X_{t+1}$ aren't = 1), then then regression coefficient will no longer be equal to b. To get a sense for why, imagine that, in addition to drift, $X$ is under moderate stabilizing selection. This means that $X_t$ is no longer just a record of the additive evolutionary history of $\epsilon_x$, and that a causal effect of $X$ on $Y$ is not evident from the trait covariance at the tips of a phylogeny. Just because you can't see it anymore, doesn't mean it isn't important.
+
+![Figure 1](figures/MA_DAG.png){width=60%}
+
+We previously stated that a cross section of current species trait values can provide an unbiased estimate of the change in trait $Y$ in response to changes in $X$. This fact is well known in the comparative literature [@pagel1993seeking; @rohle2006comment], and consistent with the rules of do-calculus--given the strict assumptions of the model outined before. However, if traits were correlated in the past but no longer exhibit any association, then evolutionary history is a confounder. For example, in Figure 4B, $U_0$ creates a "backdoor path" that connects all pairs of $X_t$ and $Y_t$.
+
+Phylogentic position is just a type of clustering, and the presence of clusters (such as a clade) in comparative datasets makes analyses more susceptible to Simpson's paradox, a reversal of trend at group (clade) vs individual (species) level. Statistical adjustment for phylogeny helps reduce both the type I (false-positive) and type II (false-negative) error rates (plus the Type M and Type S errors). It should be noted here that "adjusting for phylogeny" is not a magic-fix for unobserved confounding that is persistent throughout the phylogenetic tree. But it can help us adjust for confounding in the past.
+
+HOW CAN WE TELL IF ITS PHYLOGENETIC CONFOUNDING VS A CAUSAL RELATIONSHIP? IN THE FORMER, THE COVARIANCE BETWEEN X AND Y WILL DECREASE OVER TIME. IN THE LATTER IT IS CONSTANT/STABLE.
+
+Additionally, even if there was zero structural phylogenetic confounding, it would still be a good idea in any finite sample to adjust for phylogeny because, as a source of variation in $Y$, phlyogeny is a "good control" in that it helps us isolate variation in $Y$ that is due to possible causal effects of $X$. Marginalizing over phylogenetic position can also give us imrpoved estimtes of the average effects when clades are unequally sampled.
 
 
-Why would we care about the phylogenetic correlation? Because this is an indicator that the traits co-evolve across the phylogenetic tree rather than just at the tips. 
+This model assumes that trait co-evolution is *ergodic*, which means that the time average of the co-evolutionary process is equal to the ensemble average. In other words, a cross-section contains the same information as a time series. Remarkably, this means that even a simple species regression (i.e., regression of $Y$ on $X$, with no phylogenetic information considered) provides an unbiased estimate of $b$.
 
-## "Static" PCMs
+An OU model where the response is undergoing adaptive evolution and the predictor is drifting also works. But if the predictor is under selection, things get messed up.
 
-Static PCMs quantify co-evolution between traits using the evolutionary regression or correlation coefficient [@pagel1993seeking]. The evolutionary regression coefficient is an undirected association between traits over evolutionary time is $b = \frac{\sigma(X,Y)}{\sigma^2(X)}$, and the evolutionary correlation coefficient is the standardized coefficient $\rho = \frac{\sigma(X,Y)}{\sigma(X)\sigma(Y)}$ which can be interpreted as "a one standard deviation increase in trait $X$ is associated with a $\rho$ standard deviation change in trait $Y$."
 
-#### When can we interpret the evolutionary regression as a causal effect?
 
-```{r, message=FALSE, warning=FALSE}
-require(rethinking)
-require(dagitty)
+Why would we care about the phylogenetic correlation? Because this is an indicator that the traits co-evolve across the phylogenetic tree rather than just at the tips.
 
-phy_no_confound <- dagitty( "dag {
-                            PHY -> Y
-                            X -> Y
-                            }")
 
-phy_confound <- dagitty( "dag {
-                            PHY -> Y
-                            PHY -> X
-                            X -> Y
-                            }")
-  
-par(mfrow=c(1,2))
-drawdag(phy_no_confound)
-drawdag(phy_confound)
-  
-```
+OU ADAPATIVE EVOLUTION AREN'T JUST A FIX FOR VIOLATION OF BROWNIAN MOTION--THEY IMPLY AN ENTIRELY DIFFERENT THEORETICAL ESTIMAND! Difference in Y given difference in X vs difference in the equilibrium trait value of Y given X. In the latter, the mean is not ergodic?
 
-To understand when the evolutionary regression coefficient can be interpreted as a causal effect, we must first clarify what "causality" means. Following Pearl (some citations), we say that $X$ is a cause of $Y$ when $Pr(Y|do(X = x)) \neq Pr(Y|do(X = \textrm{not x}))$. The do() operator represents an *intervention* in which the value of some variable is fixed (for example, through assignment in a randomized experiment). If the probability distribution of $Y$ is sensitive to the value of $X$ that is assigned, then $X$ has a causal effect on $Y$. Note here that $X$ refers to a random variable while $x$ refers to some realized unit value of that variable.
+STATE DEPENDENT ANALYSES MAKE US MORE SUSCEPTIBLE TO DARWIN'S SCENARIO -- UNREPLICATED BURSTS. REMOVAL OF PHYLOGENETIC CONFOUNDING RELIES ON THE COVARIANCE BETWEEN X AND Y DECREASING OVER TIME. IF THEY ARE MAINTAINED BY SELECTION WITHIN A CLADE, WE MAY FOOL OURSELVES. (!!!). SOLUTION = CLADE SPECIFIC RANDOM EFFECTS.
+
+## Causality on Phylogenetic Trees
+
+TEST YOUR METHOD AGAINST MODEL MISSPECIFICATION--WHAT IF DATA WERE GENERATED UNDER CORRELATED DRIFT? AFTER CLARIFYING HOW THESE ARE FUNDAMENTALLY DIFFERENT QUESTIONS/ESTIMANDS, IMPORTANT TO SHOW HOW THEY INFUENCE EACH OTHERS ESTIMATES IF WE IGNORE THEM. MY INTUITION = IGNORING SELECTION LEADS TO BIAS, IGNORING DRIFT DOES NOT.
+
+
+![Figure 1](figures/phylo_DAG.png)
+
 
 ### Phylogenetic Generalized Least Squares (PGLS)
 
@@ -57,7 +75,7 @@ $$y_{ij} = \beta_0 + \beta_xx_{ij} + \epsilon_{ij}$$ $$ \epsilon \sim  \mathcal{
 
 The most commonly assumed model is Brownian motion (also called the Wiener process and thus denoted $W$), where $W$ follows a random walk proportional to time ($T$), such that, for any time $t$:
 
-$$ W_{T= t} - W_{T = 0} \sim\mathcal{N}(0,\sigma t) $$ Therefore, the variance for a given species or population $j$ is proportional to the total branch length of the tree leading from root to tip, and the covariance between $j$ and any other species or population $k$ is proportional to their amount of shared history. For example, imagine a phylogeny with only $J$ = 3 tip species. The last common ancestor of all species is dated to T = 10,000 years ago <!--# maybe make it 1 million? more realistic for species -->, and the last common ancestor of 2 and 3 is dated to 0.5T = 5,000 years ago. The implied phylogenetic variance-covariance matrix ($\boldsymbol{V}$) under a Brownian motion model is thus:
+$$ W_{T= t} - W_{T = 0} \sim\mathcal{N}(0,\sigma t) $$ Therefore, the variance for a given species or population $j$ is proportional to the total branch length of the tree leading from root to tip, and the covariance between $j$ and any other species or population $k$ is proportional to their amount of shared history. For example, imagine a phylogeny with only $J$ = 3 tip species. The last common ancestor of all species is dated to T = 1,000,000 years ago, and the last common ancestor of 2 and 3 is dated to 0.5T = 500,000 years ago. The implied phylogenetic variance-covariance matrix ($\boldsymbol{V}$) under a Brownian motion model is thus:
 
 $$ \boldsymbol{V} = \sigma^2 \begin{bmatrix}
 T, & 0, & 0 \\
@@ -91,7 +109,7 @@ Although PGLS is widely used in comparative biology, it has several key limitati
 
 ### Phylogenetic Generalized Multilevel Models
 
-Phylogenetic generalized multilevel (or mixed-effects) models (PGLMMs) extend the study of trait coevolution by leveraging analytic strategies developed in quantitative genetics to accommodate more complex, multivariate model designs with non-Gaussian outcomes [@lynch1991methods; @hadfield2010general; @ives2010phylogenetic; @ives2011generalized] <!--# there's also Lynch 1991 METHODS FOR THE ANALYSIS OF COMPARATIVE DATA IN EVOLUTIONARY BIOLOGY, Evolution -->. Rather than explicitly scaling the off-diagonals of $\boldsymbol{V}_s$ with some parameter $\lambda$, phylogenetic signal is quantified as the ratio of the variance of phylogenetic random effects $\nu$ (also called 'mixed' or 'varying' effects) to total trait variance. For example, an observation of a Gaussian trait $Y$ from a species or population $j$ and predictor $X$ is modeled as:
+Phylogenetic generalized multilevel (or mixed-effects) models (PGLMMs) extend the study of trait coevolution by leveraging analytic strategies developed in quantitative genetics to accommodate more complex, multivariate model designs with non-Gaussian outcomes [@lynch1991methods; @hadfield2010general; @ives2010phylogenetic; @ives2011generalized]. Rather than explicitly scaling the off-diagonals of $\boldsymbol{V}_s$ with some parameter $\lambda$, phylogenetic signal is quantified as the ratio of the variance of phylogenetic random effects $\nu$ (also called 'mixed' or 'varying' effects) to total trait variance. For example, an observation of a Gaussian trait $Y$ from a species or population $j$ and predictor $X$ is modeled as:
 
 $$ y_{i,j} = \beta_0 + \beta_{x} x_{ij} + \nu_{j} + \epsilon_{ij} \\$$ $$ \nu \sim \mathcal{N}(0,\boldsymbol{\Sigma}_{\nu}) \\$$ $$\epsilon_{ij} \sim \mathcal{N}(0,\boldsymbol{\Sigma}_{\epsilon}) \\$$ $$\boldsymbol{\Sigma}_{\nu} = \sigma^2_{\nu}\boldsymbol{V}_s \\$$ $$\boldsymbol{\Sigma}_{\epsilon} = \sigma^2_{\epsilon}\boldsymbol{I} \\$$
 
@@ -102,6 +120,11 @@ In this model, $\beta_{x(\textrm{PGLMM})}$ has the same interpretation as $\beta
 #### Multivariate PGLMMs
 
 Residual and phylogenetic correlations can be different! Why? Plasticity and/or microevolutionary response to X may not be the same as the macroevolutionary process, a violation of *ergodicity*. or correlated measurement error.
+
+PHYLOGENETIC CORRELATION DIRECTLY RELATED TO evolutionary regression coefficient $b$.
+
+$$ \rho(X,Y) = \frac{\sigma(X,Y)}{\sigma(x)\sigma(Y)} $$
+$$ b = \rho(X,Y)\frac{\sigma(Y)}{\sigma(X)} $$
 
 #### Phylogenetic Path Analysis & Causal Inference
 
