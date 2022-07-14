@@ -5,7 +5,7 @@ editor: visual
 bibliography: references.bib
 ---
 
-## Introduction
+## 1. Introduction
 
 Phylogenetic comparative methods (PCMs) are commonly used to study the co-evolution of organismal traits, spanning topics such as anatomy and physiology [@garland2005phylogenetic; @oconnor2022immunity; @thayer2018impact; @navalon2019evolutionary; @dunn2015evolutionary], life history and behavior [@maclean2012does; @clayton1994comparative; @salguero2016fast; @bielby2007fast; @cornwallis2017cooperation; @wilkinson2019recurrent], and cultural evolution [@mace2005phylogenetic; @watts2015broad; @navarrete2016coevolution]. "Co-evolution" refers to repeatable patterns of trait co-variation over evolutionary time, across species or across populations. In practice, co-evolution can be investigated using a diverse family of statistical techniques, depending on the research question and type of data available [@harvey1991comparative; @garamszegi2014modern; @nunn2011comparative].
 
@@ -15,7 +15,7 @@ A major barrier to incorporating causal inference into study design, analysis, a
 
 In this article, we first review some popular classes of PCM and their assumptions and limitations with respect to causal inference. These range from standard regression models that lack clear causal interpretations over phylogenetic path analysis, which makes causal assumptions explicit, to dynamic models that detect temporal contingency (but are limited to binary traits). We then introduce a new dynamic method which overcomes some of these limitations and enables the study of directional trait co-evolution for an arbitrary number of traits that can be used with any type of data (continuous, discrete, ordered).
 
-## Co-evolution as correlated drift: the evolutionary regression coefficient
+## 2. Co-evolution as correlated drift: the state-independent evolutionary regression coefficient
 
 The most common way to quantify co-evolution between traits is the evolutionary regression coefficient [@pagel1993seeking]. The evolutionary regression coefficient is a measure of association between traits over evolutionary time, $b = \frac{\sigma(X,Y)}{\sigma^2(X)}$. It can be interpreted as "a one unit increase in trait $X$ is associated with a $b$ unit change in trait $Y$." When can we interpret these statistics as causal effects? The short answer is...almost never! To explain why, we sketch out assumptions needed to map an evolutionary regression coefficient onto a causal estimand.
 
@@ -39,15 +39,15 @@ This model assumes that all change in trait $X$ is due to random drift $\epsilon
 
 We previously stated that a cross section of current species trait values can provide an unbiased estimate of the change in trait $Y$ in response to changes in $X$. This fact is well known in the comparative literature [@pagel1993seeking; @rohle2006comment], and consistent with the rules of do-calculus--given the strict assumptions of the model outlined before. However, if traits were correlated in the past but no longer exhibit any association, then evolutionary history acts as a confounder. For example, in Figure 4B, $U_0$ creates a "backdoor path" that connects all pairs of $X_t$ and $Y_t$. This means that $P(Y|do(X)) \neq P(Y|X)$, unless we can somehow adjust for $U_0$.
 
-The confounder denoted $U$ is unobserved, meaning that we can't statistically adjust for it. However, note that for any time $t$, $X_t$ and $Y_t$ are independent of $U_0$ conditional on $\{ X_{t-1},X_{t-1}$. In other words, the present is conditionally independent of $U_0$ (or "d-seperated") given the past. But in most comparative studies, we have not observed the past, only the present. This is where phylogeny can help us, because more closely related species or populations have more similar confounding factors (e.g., shared genetic architecture, environmental similarity), on average, than distantly related ones. Assuming that we have an appropriate model of evolution, then the patristic distance between species (i.e., time since divergence from a common ancestor) allows us to probabalistically reconstruct unobserved past values of $X$ and $Y$, closing the backdoor path $X \leftarrow U \rightarrow Y$ (cite Rethinking 2nd edition). It should be noted that such a scenario is sometimes called "phylogenetic confounding," but...[DOESN"T WORK IF U IS STILL PRESENT AT THE TIPS. HOW CAN WE TELL IF ITS PHYLOGENETIC CONFOUNDING VS A CAUSAL RELATIONSHIP? IN THE FORMER, THE COVARIANCE BETWEEN X AND Y WILL DECREASE OVER TIME. IN THE LATTER IT IS CONSTANT/STABLE].
+The confounder denoted $U$ is unobserved, meaning that we can't statistically adjust for it. However, note that for any time $t$, $X_t$ and $Y_t$ are independent of $U_0$ conditional on $\{ X_{t-1},X_{t-1} \}$. In other words, the present is conditionally independent of $U_0$ ("d-seperated") given the past. But in most comparative studies, we have not observed the past, only the present. This is where phylogeny can help us, because more closely related species or populations have more similar confounding factors (e.g., shared genetic architecture, environmental similarity), on average, than distantly related ones. Assuming that we have an appropriate model of evolution, then the patristic distance between species (i.e., time since divergence from a common ancestor) allows us to probabalistically reconstruct unobserved past values of $X$ and $Y$, closing the backdoor path $X \leftarrow U \rightarrow Y$ (cite Rethinking 2nd edition). It should be noted that such a scenario is sometimes called "phylogenetic confounding," but...[DOESN"T WORK IF U IS STILL PRESENT AT THE TIPS. HOW CAN WE TELL IF ITS PHYLOGENETIC CONFOUNDING VS A CAUSAL RELATIONSHIP? IN THE FORMER, THE COVARIANCE BETWEEN X AND Y WILL DECREASE OVER TIME. IN THE LATTER IT IS CONSTANT/STABLE].
 
 Phylogentic position is just a type of clustering, and the presence of clusters (such as a clade) in comparative datasets makes analyses more susceptible to Simpson's paradox, a reversal of a trend at the group level (clade) vs the individual level (species). Statistical adjustment for phylogeny helps reduce both the type I (false-positive) and type II (false-negative) error rates (plus the Type M and Type S errors [ADD CITATION FOR WHAT THESE ARE]). It should be noted here that "adjusting for phylogeny" is not a magic-fix for unobserved confounding that is persistent throughout the phylogenetic tree. But it can help us adjust for confounding in the past.
 
-Additionally, even if there was zero structural phylogenetic confounding (Figure 1A), it would still be a good idea in any finite sample to adjust for phylogeny because, as a source of variation in $Y$, phlyogeny is a "good control" in that it helps us isolate variation in $Y$ that is due to possible causal effects of $X$. Marginalizing over phylogenetic position can also give us improved estimates of the average effects when clades are unequally sampled. 
+Additionally, even if there was zero structural phylogenetic confounding (Figure 1A), it would still be a good idea in any finite sample to adjust for phylogeny because, as a source of variation in $Y$, phylogeny is a "neutral-good control" in that it reduces variation in $Y$, thus improving the precision of our estimates for the causal effect of $X$ [@cinelli2021crash]. Marginalizing over phylogenetic position can also give us improved estimates of the average effects when clades are unequally sampled.
 
-Now that we have a sense for the assumed causal model underlying most phylogenetic comparative analyses, and motivation for why we statistically adjust for phylogeny, let's review some popular methods for estimating the evolutionary regression coefficient and introduce some variations on the causal model in Figure 1.
+Now that we have a sense for the assumed causal model underlying most phylogenetic comparative analyses, and motivation for why we statistically adjust for phylogeny, let's review some popular methods for estimating the evolutionary regression coefficient, and introduce some variations on the causal model in Figure 1.
 
-### Phylogenetic Generalized Least Squares (PGLS)
+### 2.1 Phylogenetic Generalized Least Squares (PGLS)
 
 Phylogenetic generalized least squares (PGLS) is a variant of linear regression that accounts for the covariance between species or populations due to shared evolutionary history (likewise for its predecessor, independent contrasts) [@grafen1989phylogenetic; @symonds2014primer; @blomberg2012independent]. Given some outcome $Y$ and a co-evolutionary predictor $X$, an observation $i$ from species or population $j$ is modeled as:
 
@@ -55,7 +55,7 @@ $$y_{ij} = \beta_0 + \beta_xx_{ij} + \epsilon_{ij}$$ $$ \epsilon \sim  \mathcal{
 
 The most commonly assumed model is Brownian motion (also called the Wiener process and thus denoted $W$), where $W$ follows a random walk proportional to time ($T$), such that, for any time $t$:
 
-$$ W_{T= t} - W_{T = 0} \sim\mathcal{N}(0,\sigma t) $$ Therefore, the variance for a given species or population $j$ is proportional to the total branch length of the tree leading from root to tip, and the covariance between $j$ and any other species or population $k$ is proportional to their amount of shared history. For example, imagine a phylogeny with only $J$ = 3 tip species. The last common ancestor of all species is dated to T = 1,000,000 years ago, and the last common ancestor of 2 and 3 is dated to 0.5T = 500,000 years ago. The implied phylogenetic variance-covariance matrix ($\boldsymbol{V}$) under a Brownian motion model is thus:
+$$ W_{T= t} - W_{T = 0} \sim\mathcal{N}(0,\sigma t) $$ Therefore, the variance for a given species or population $j$ is proportional to the total branch length of the tree leading from root to tip, and the covariance between $j$ and any other species or population $k$ is proportional to their amount of shared history. Note that this is a continuous-time analog of the discrete time model presented in Figure 1. For example, imagine a phylogeny with only $J$ = 3 tip species. The last common ancestor of all species is dated to T = 1,000,000 years ago, and the last common ancestor of 2 and 3 is dated to 0.5T = 500,000 years ago. The implied phylogenetic variance-covariance matrix ($\boldsymbol{V}$) under a Brownian motion model is thus:
 
 $$ \boldsymbol{V} = \sigma^2 \begin{bmatrix}
 T, & 0, & 0 \\
@@ -73,7 +73,7 @@ $$ \boldsymbol{V}_s = \frac{\boldsymbol{V}}{T} = \sigma^2 \begin{bmatrix}
 0, & 0.5, & 1
 \end{bmatrix} $$
 
-Empirically, the actual degree of covariance between related species or populations may be less than expected under a pure Brownian motion model. For example, when evolution is rapid (or more mundanely, when measurement error on trait data is substantial) the "phylogenetic signal" will be weak such that even closely related taxa may have dramatically different trait values [@blomberg2003testing; @kamilar2013phylogenetic]. PGLS can estimate the strength of phylogenetic signal from comparative data, multiplying the off-diagonals of the variance-covariance matrix by $\lambda \in [0,1]$ [@pagel1999inferring]. For example:
+Empirically, the actual degree of covariance between related species or populations may be less than expected under a pure Brownian motion model. For example, when evolution is rapid (or more mundanely, when measurement error is substantial) the "phylogenetic signal" will be weak such that even closely related taxa may have dramatically different trait values [@blomberg2003testing; @kamilar2013phylogenetic]. PGLS can estimate the strength of phylogenetic signal from comparative data, multiplying the off-diagonals of the variance-covariance matrix by $\lambda \in [0,1]$ [@pagel1999inferring]. For example:
 
 $$ \boldsymbol{V_s} = \sigma^2 \begin{bmatrix}
 1, & 0, & 0 \\
@@ -83,31 +83,34 @@ $$ \boldsymbol{V_s} = \sigma^2 \begin{bmatrix}
 
 This scaling is often referred to as a "branch length transformation," because shrinking the off-diagonals (shared evolutionary history) while holding the diagonals constant (independent evolution) is equivalent to "stretching" the terminal branches leading to the tips and "shrinking" the past co-evolutionary branches. $\lambda = 1$ indicates that the phylogenetic strength is as strong as expected under a Brownian motion model, while lower values means that a lower proportion of the trait variance can be attributed to shared evolutionary history. At the extreme of $\lambda = 0$, $\boldsymbol{V}_s$ becomes an identity matrix and PGLS reduces to standard least squares regression.
 
-Brownian motion is the simplest and most widely used model, and often interpreted as "drift" across the phylogenetic tree. Other popular choices include Ornstein-Uhlenbeck, where change is due to both random drift and "stabilizing selection" around some optimal trait value, as well as Early Burst models of adaptive radiation where the rate of change ($\sigma$) decreases over time. NOTE ON OU COVARIANCE: An OU model where the response is undergoing adaptive evolution and the predictor is drifting also works. But if the predictor is under selection, things get messed up. In general, $\boldsymbol{V}$ is constructed by inputting a matrix of phylogenetic distances to some covariance function $C(x,x')$ such that $V_{[j,k]} = C(j,k)$.
+Brownian motion is the simplest and most widely used model, and often interpreted as "drift" across the phylogenetic tree. Given the assumptions laid out in the previous section, the Brownian motion covariance function allows us to appropriately adjust for phylogenetic confounding and non-independence. But if traits do not evolve according to a Brownian motion process, we need a different way to construct $V$. In general, $\boldsymbol{V}$ is constructed by inputting a matrix of patristic distances to some covariance function $C(x,x')$ such that $V_{[j,k]} = C(j,k)$. For example, Early Burst models of adaptive radiation allow the rate of change ($\sigma$) to decrease over time. Another popular choice is the Ornstein-Uhlenbeck (OU) covariance function, which follow from a model of trait evolution where change is due to both stochastic "drift" and deterministic "selection." As a result, the relationship between patristic distance and phylogenetic covariance becomes non-linear. Note however that use of an OU covariance function in the PGLS framework still assumes zero selection on the predictors.
 
-Although PGLS is widely used in comparative biology, it has several key limitations. These include the assumption of Gaussian errors, proneness to overfitting due to a lack of parameter regularization, and failure to accommodate many common data structures such as repeated measures of species trait values, missing data, and measurement error. In the next section we review more flexible regression approaches, as well as an important alternative method of estimating evolutionary associations.
+Although PGLS is widely used in comparative biology, it has several key limitations. These include the assumption of Gaussian errors, proneness to overfitting due to a lack of parameter regularization, and failure to accommodate many common data features such as repeated measures of species trait values, missing data, and measurement error. In the next section we review more flexible regression approaches, as well as an important alternative method of estimating evolutionary associations that distinguishes between macro and micro evolutionary correlations.
 
-### Phylogenetic Generalized Multilevel Models
+### 2.2 Phylogenetic Generalized Multilevel Models (PGLMMs)
 
-Why would we care about the phylogenetic correlation? Because this is an indicator that the traits co-evolve across the phylogenetic tree rather than just at the tips.
-
-Phylogenetic generalized multilevel (or mixed-effects) models (PGLMMs) extend the study of trait coevolution by leveraging analytic strategies developed in quantitative genetics to accommodate more complex, multivariate model designs with non-Gaussian outcomes [@lynch1991methods; @hadfield2010general; @ives2010phylogenetic; @ives2011generalized]. Rather than explicitly scaling the off-diagonals of $\boldsymbol{V}_s$ with some parameter $\lambda$, phylogenetic signal is quantified as the ratio of the variance of phylogenetic random effects $\nu$ (also called 'mixed' or 'varying' effects) to total trait variance. For example, an observation of a Gaussian trait $Y$ from a species or population $j$ and predictor $X$ is modeled as:
+Phylogenetic generalized multilevel (or mixed-effects) models (PGLMMs) extend the study of trait coevolution by leveraging analytic strategies developed in quantitative genetics to accommodate more complex model designs with non-Gaussian outcomes [@lynch1991methods; @hadfield2010general; @ives2010phylogenetic; @ives2011generalized]. Rather than explicitly scaling the off-diagonals of $\boldsymbol{V}_s$ with some parameter $\lambda$, phylogenetic signal is quantified as the ratio of the variance of phylogenetic random effects $\nu$ (also called 'mixed' or 'varying' effects) to total trait variance. For example, an observation of a Gaussian trait $Y$ from a species or population $j$ and predictor $X$ is modeled as:
 
 $$ y_{i,j} = \beta_0 + \beta_{x} x_{ij} + \nu_{j} + \epsilon_{ij} \\$$ $$ \nu \sim \mathcal{N}(0,\boldsymbol{\Sigma}_{\nu}) \\$$ $$\epsilon_{ij} \sim \mathcal{N}(0,\boldsymbol{\Sigma}_{\epsilon}) \\$$ $$\boldsymbol{\Sigma}_{\nu} = \sigma^2_{\nu}\boldsymbol{V}_s \\$$ $$\boldsymbol{\Sigma}_{\epsilon} = \sigma^2_{\epsilon}\boldsymbol{I} \\$$
 
 Where $\boldsymbol{I}$ is an identity matrix and thus the residuals $\epsilon$ are assumed conditionally independent. The "phylogenetic signal" is now estimated as $\lambda_{\textrm{PGLMM}} = \frac{\sigma_{\nu}^2}{\sigma_{\nu}^2 + \sigma_{\epsilon}^2}$ (adjusted for $X$) and equivalent to $\lambda_{\textrm{PGLS}}$, but with the greater flexibility afforded by PGLMMs. $\lambda_{\textrm{PGLMM}}$ is also sometimes referred to as "phylogenetic heritability" [@hadfield2010general], since it is calculated in the same way as heritability based on pedigrees in quantitative genetics.
 
-In this model, $\beta_{x(\textrm{PGLMM})}$ has the same interpretation as $\beta_{x(\textrm{PGLS})}$. If the response was non-Gaussian, $\beta_{x(\textrm{PGLS})}$ has the same interpretation *on the latent scale*. Conversion of the phylogenetic regression coefficient $\beta_{x(\textrm{PGLMM})}$ to the observation scale requires inverting the link function, and will be sensitive to other model parameters.
+In this model, $\beta_{x(\textrm{PGLMM})}$ has the same interpretation as $\beta_{x(\textrm{PGLS})}$. If the response was non-Gaussian, $\beta_{x(\textrm{PGLS})}$ has the same interpretation *on the latent scale*. Conversion of the phylogenetic regression coefficient $\beta_{x(\textrm{PGLMM})}$ to the observation scale requires inverting the link function, and will be sensitive to other model parameters. Modelling discrete data in the PGLMMM framework can be biologically motivated if we conceptualize discrete phenotypes (binary, ordinal, categorical) as manifestations of a latent continuous trait, as in the quantitative genetic threshold model [@wright1934analysis; @felsenstein2005using]. 
 
-### Mutli-response PGLMMs: contrasting macro and microevolution
+In addition to accommodating non-Gaussian traits, PGLMMs can readily account for measurement error, within-species trait variation, phylogenetic uncertainty, and missing data [@harmon2005effect; @garamszegi2014uncertainties; @jaeggi2020variable]. Under the PGLMM umbrella, authors have also extended evolutionary models of trait change to include variable rates of drift and directional change across the phylogenetic tree [@revell2021variable; @pagel2022general].
+
+### 2.3 Mutlivariate PGLMMs: partitioning macro and microevolution
 
 Residual and phylogenetic correlations can be different! Why? Plasticity and/or microevolutionary response to X may not be the same as the macroevolutionary process, a violation of *ergodicity*. or correlated measurement error.
+
+While the terminology is not always consistent in the literature, note that "phylogenetic correlation" refers to a . A residual correlation refers to the remaining trait covariance *after* accounting for similarity due to shared evolutionary history. The residual correlations derived from PCMs are often interpreted as evidence for convergent evolution, adjusted for statistical non-independence and confounding due to phylogeny.
+
 
 PHYLOGENETIC CORRELATION DIRECTLY RELATED TO evolutionary regression coefficient $b$.
 
 $$ \rho(X,Y) = \frac{\sigma(X,Y)}{\sigma(x)\sigma(Y)} $$
 $$ b = \rho(X,Y)\frac{\sigma(Y)}{\sigma(X)} $$
-
+The variance partioning approach can be useful, but to study adaptive co-evolution we will need to move beyond the GLMM world, utilizing state-space models.
 
 ### Misc. Notes
 
@@ -121,19 +124,21 @@ TEST YOUR METHOD AGAINST MODEL MISSPECIFICATION--WHAT IF DATA WERE GENERATED UND
 
 
 ![Figure 1](figures/phylo_DAG.png)
-### Phylogenetic Path Analysis
+### 2.4 Phylogenetic Path Analysis
 
-While the terminology is not always consistent in the literature, note that "phylogenetic correlation" refers to a . A residual correlation refers to the remaining trait covariance *after* accounting for similarity due to shared evolutionary history. The residual correlations derived from PCMs are often interpreted as evidence for convergent evolution, adjusted for statistical non-independence and confounding due to phylogeny.
 
-Independent contrasts, PGLS, PGLMMs, PPA
+## 3. Dynamic state-space models of co-evolution
 
-Discrete data can be modeled in the GLMMM framework if we conceptualize discrete phenotypes (binary, ordinal, categorical) as manifestations of a latent continuous trait, as in the quantitative genetic threshold model [@wright1934; @felsenstein2005using].
+### 3.1 Ornstein-Uhlenbeck and co
 
-## Dynamic state-space models of co-evolution
+### 3.2 Discrete, HMM
 
-Pagel's discrete, Hidden Markov Models, Butler & King OU
+Pagel's classic limited to two binary traits, diveristree and HMM add flexibility to more than two states and variable transition rates throughout the tree, but remain limited in the discrete setting. Given infinite data, discrete transition matrix is good, but in finite samples it is problematic.... Unfortunately though this method is fundamentally limited to discrete traits, sometimes forcing researchers to dichotomize continuous variables (e.g. environmental harshness [@cornwallis2017cooperation]), which can lead to loss of power and inconsistent results [@dawson2012dichotomizing; @royston2006dichotomizing]. Because of this limitation to binary traits this method has not been applied to topics typically involving continuous traits (e.g. morphology, life history, brain size, etc.). 
 
-can be identified statistically as non-zero between-trait phylogenetic correlations----or any other measure of mutual information over evolutionary time.
+
+### 3.3 GDPM: how our method combines features of OU and Discrete, and PGLMMs
+
+
 
 THREE SCENARIOS TO SIMULATE:
 
@@ -142,3 +147,9 @@ THREE SCENARIOS TO SIMULATE:
 \(2\) Correlated drift (CoV\[X_1,X_2\]) != 0)
 
 \(3\) Including correlated drift (shrinking cross-effects)
+
+IDEA: In simulation study, compare statistical power (PP > 0.9, or whatever) vs phylogenetic signal.
+
+## 4. Case study: Primate life history and niche complexity
+
+
