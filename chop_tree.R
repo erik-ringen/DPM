@@ -1,6 +1,8 @@
 require(phytools)
 require(phangorn)
 
+# git test
+
 chop_tree <- function(tree, scale=T) {
   #### Cut up phylogenetic tree into segments #################
   times <- node.depth.edgelength(tree) # date of each node
